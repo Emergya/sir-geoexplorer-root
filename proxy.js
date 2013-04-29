@@ -132,11 +132,8 @@ function obtainData (request, method){
             data = request.input;
         }
     }else if(method == "POST"){ // POST can use postParams || request.input
-        if(!!request.postParams){
-            data = request.postParams
-        }else if (request.headers.get("content-length")) {
-            data = request.input;   
-        }
+        // We pass the input directly or post will fail.
+        data = request.input;       
     }else if(method == "GET"){ // GET can use queryParams || request.input
         if(!!request.queryParams){ 
             data = request.queryParams
@@ -203,7 +200,15 @@ var showParams = exports.showParams =  function (keyValues){
              if(!!key 
                 && !!keyValues[key]){
                 //data[key] = config.request.queryParams[key];
-                console.log(key+"="+keyValues[key]);
+
+                var value = keyValues[key];
+                if(value instanceof Object) {
+                    console.log(key+"= {");
+                    showParams(value);
+                    console.log("}");
+                } else {
+                    console.log(key+"="+keyValues[key]);    
+                }
             }
         }
 }
