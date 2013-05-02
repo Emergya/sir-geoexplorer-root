@@ -3,7 +3,7 @@ var Headers = require("ringo/utils/http").Headers;
 var MemoryStream = require("io").MemoryStream;
 var objects = require("ringo/utils/objects");
 
-var isDebug = java.lang.System.getProperty("app.debug");
+var isDebug = true;//java.lang.System.getProperty("app.debug");
 
 var URL = java.net.URL;
 
@@ -83,15 +83,15 @@ var getUrlProps = exports.getUrlProps = function(url) {
 
 var createProxyRequestProps = exports.createProxyRequestProps = function(config) {
     if(isDebug){
-        // console.log("************************************  createProxyRequestProps");
-        // console.log("***************config*************");
-        // showParams(config);
-        // console.log("***************request*************");
-        // showParams(config.request);
-        // console.log("***************request.postParams*************");
-        // showParams(config.request.postParams);
-        // console.log("***************request.queryParams*************");
-        // showParams(config.request.queryParams);
+        console.log("************************************  createProxyRequestProps");
+        console.log("***************config*************");
+        showParams(config);
+        console.log("***************request*************");
+        showParams(config.request);
+        console.log("***************request.postParams*************");
+        showParams(config.request.postParams);
+        console.log("***************request.queryParams*************");
+        showParams(config.request.queryParams);
     }
     var props;
     var request = config.request;
@@ -133,7 +133,8 @@ function obtainData (request, method){
         }
     }else if(method == "POST"){ // POST can use postParams || request.input
         // We pass the input directly or post will fail.
-        data = request.input;       
+        data = request.postParams ? 
+            request.postParams : request.input;       
     }else if(method == "GET"){ // GET can use queryParams || request.input
         if(!!request.queryParams){ 
             data = request.queryParams
