@@ -1,8 +1,8 @@
-var Client = require("ringo/httpclient").Client;
-var base64 = require("ringo/base64");
-var auth = require("../auth");
-var Headers = require("ringo/utils/http").Headers;
-var objects = require("ringo/utils/objects");
+var Client = require('ringo/httpclient').Client;
+var base64 = require('ringo/base64');
+var auth = require('../auth');
+var Headers = require('ringo/utils/http').Headers;
+var objects = require('ringo/utils/objects');
 
 exports.app = function(request) {
     var details = auth.authenticate(request);
@@ -12,12 +12,12 @@ exports.app = function(request) {
         cookie = details.token;
     } else {
         // clear any previously set cookie
-        cookie = "JSESSIONID=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        cookie = 'JSESSIONID=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
     return {
         status: status,
         headers: {
-            "Set-Cookie": cookie + ";Path=/"
+            'Set-Cookie': cookie + ';Path=/'
         },
         //Added userInfo
         body: [details.userInfo]

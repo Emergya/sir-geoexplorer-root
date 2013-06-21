@@ -1,9 +1,12 @@
-var clientRequest = require("ringo/httpclient").request;
-var Headers = require("ringo/utils/http").Headers;
-var MemoryStream = require("io").MemoryStream;
-var objects = require("ringo/utils/objects");
+var clientRequest = require('ringo/httpclient').request;
+var Headers = require('ringo/utils/http').Headers;
+var MemoryStream = require('io').MemoryStream;
+var objects = require('ringo/utils/objects');
+var responseForStatus = require('../util').responseForStatus;
 
-var isDebug = true;//java.lang.System.getProperty("app.debug");
+
+
+var isDebug = true; //java.lang.System.getProperty("app.debug");
 
 var URL = java.net.URL;
 
@@ -12,32 +15,34 @@ var app = exports.app = function(request) {
     var url = request.queryParams.url;
     if (url) {
 
-        if(isDebug){
-            console.log("Proxing --> " + url);
+        if (isDebug) {
+            console.log('Proxing --> ' + url);
         }
 
         response = proxyPass({
-            request: request, 
+            request: request,
             url: url
         });
 
     } else {
-        response = responseForStatus(400, "Request must contain url parameter.");
+        response = responseForStatus(400, 'Request must contain url parameter.');
     }
     return response;
 };
 
 var pass = exports.pass = function(config) {
     //console.log("pass");
-    if (typeof config == "string") {
-        config = {url: config};
+    if (typeof config == 'string') {
+        config = {
+            url: config
+        };
     }
     return function(request) {
         var query = request.queryString;
-        var path = request.pathInfo && request.pathInfo.substring(1) || "";
-        var newUrl = config.url + path + (query ? "?" + query : "");
+        var path = request.pathInfo && request.pathInfo.substring(1) || '';
+        var newUrl = config.url + path + (query ? '?' + query : '');
         return proxyPass(objects.merge({
-            request: request, 
+            request: request,
             url: newUrl
         }, config));
     };
@@ -48,7 +53,7 @@ var getUrlProps = exports.getUrlProps = function(url) {
     var o, props;
     try {
         o = new URL(url);
-    } catch(err) {
+    } catch (err) {
         // pass
     }
     if (o) {
@@ -58,9 +63,9 @@ var getUrlProps = exports.getUrlProps = function(url) {
             // this could potentially be removed if the following ticket is closed
             // https://github.com/ringo/ringojs/issues/issue/121
             // but, it could make sense to keep it here as well
-            [username, password] = userInfo.split(":");
-           
-            url = url.replace(userInfo + "@", "");
+            [username, password] = userInfo.split(':');
+
+            url = url.replace(userInfo + '@', '');
         }
         var port = o.getPort();
         if (port < 0) {
@@ -73,7 +78,7 @@ var getUrlProps = exports.getUrlProps = function(url) {
             password: password || null,
             host: o.getHost(),
             port: port,
-            path: o.getPath() || "/",
+            path: o.getPath() || '/',
             query: o.getQuery(),
             hash: o.getRef()
         };
@@ -82,15 +87,15 @@ var getUrlProps = exports.getUrlProps = function(url) {
 };
 
 var createProxyRequestProps = exports.createProxyRequestProps = function(config) {
-    if(isDebug){
-        console.log("************************************  createProxyRequestProps");
-        console.log("***************config*************");
+    if (isDebug) {
+        console.log('************************************  createProxyRequestProps');
+        console.log('***************config*************');
         showParams(config);
-        console.log("***************request*************");
+        console.log('***************request*************');
         showParams(config.request);
-        console.log("***************request.postParams*************");
+        console.log('***************request.postParams*************');
         showParams(config.request.postParams);
-        console.log("***************request.queryParams*************");
+        console.log('***************request.queryParams*************');
         showParams(config.request.queryParams);
     }
     var props;
@@ -100,12 +105,12 @@ var createProxyRequestProps = exports.createProxyRequestProps = function(config)
     if (urlProps) {
         var headers = new Headers(objects.clone(request.headers));
         if (!config.preserveHost) {
-            headers.set("Host", urlProps.host + (urlProps.port ? ":" + urlProps.port : ""));
+            headers.set('Host', urlProps.host + (urlProps.port ? ':' + urlProps.port : ''));
         }
         if (!config.allowAuth) {
             // strip authorization and cookie headers
-            headers.unset("Authorization");
-            headers.unset("Cookie");
+            headers.unset('Authorization');
+            headers.unset('Cookie');
         }
         var method = request.method;
         var data = obtainData(request, method);
@@ -119,32 +124,32 @@ var createProxyRequestProps = exports.createProxyRequestProps = function(config)
             data: data
         };
     }
-    if(isDebug){
+    if (isDebug) {
         // console.log("************************************  EoF createProxyRequestProps");
     }
     return props;
 };
 
-function obtainData (request, method){
+function obtainData(request, method) {
     var data;
-    if (method == "PUT") { // put PUT request.input
-        if (request.headers.get("content-length")) {
+    if (method == 'PUT') { // put PUT request.input
+        if (request.headers.get('content-length')) {
             data = request.input;
         }
-    }else if(method == "POST"){ // POST can use postParams || request.input
+    } else if (method == 'POST') { // POST can use postParams || request.input
         // We pass the input directly or post will fail.
-        data = request.postParams ? 
-            request.postParams : request.input;       
-    }else if(method == "GET"){ // GET can use queryParams || request.input
-        if(!!request.queryParams){ 
-            data = request.queryParams
-        }else if (request.headers.get("content-length")) {
-            data = request.input;   
+        data = request.postParams ?
+            request.postParams : request.input;
+    } else if (method == 'GET') { // GET can use queryParams || request.input
+        if (!! request.queryParams) {
+            data = request.queryParams;
+        } else if (request.headers.get('content-length')) {
+            data = request.input;
         }
-    } 
+    }
 
-    if(!!data && data.url) {
-        // Prevents url from being passed as parameter.        
+    if (!! data && data.url) {
+        // Prevents url from being passed as parameter.
         delete data.url;
     }
 
@@ -152,19 +157,19 @@ function obtainData (request, method){
 }
 
 function proxyPass(config) {
-    if(isDebug){
-        console.log("************************************ proxyPass ************************************");
+    if (isDebug) {
+        console.log('************************************ proxyPass ************************************');
     }
     var response;
     var outgoing = createProxyRequestProps(config);
     var incoming = config.request;
     if (!outgoing || outgoing.scheme !== incoming.scheme) {
-        response = responseForStatus(400, "The url parameter value must be absolute url with same scheme as request.");
+        response = responseForStatus(400, 'The url parameter value must be absolute url with same scheme as request.');
     } else {
-        if(isDebug){
-            console.log("*************** outgoing -->");
+        if (isDebug) {
+            console.log('*************** outgoing -->');
             showParams(outgoing);
-            console.log("*************** outgoing.data -->");
+            console.log('*************** outgoing.data -->');
             showParams(outgoing.data);
         }
 
@@ -183,11 +188,11 @@ function proxyPass(config) {
     var headers = new Headers(objects.clone(exchange.headers));
     if (!config.allowAuth) {
         // strip out authorization and cookie headers
-        headers.unset("WWW-Authenticate");
-        headers.unset("Set-Cookie");
+        headers.unset('WWW-Authenticate');
+        headers.unset('Set-Cookie');
     }
-    if(isDebug){
-        console.log("**********************************  EoF proxyPass **********************************");
+    if (isDebug) {
+        console.log('**********************************  EoF proxyPass **********************************');
     }
     return {
         status: exchange.status,
@@ -196,20 +201,19 @@ function proxyPass(config) {
     };
 }
 
-var showParams = exports.showParams =  function (keyValues){
-    for(var key in keyValues){
-             if(!!key 
-                && !!keyValues[key]){
-                //data[key] = config.request.queryParams[key];
+var showParams = exports.showParams = function(keyValues) {
+    for (var key in keyValues) {
+        if (!! key && !! keyValues[key]) {
+            //data[key] = config.request.queryParams[key];
 
-                var value = keyValues[key];
-                if(value instanceof Object) {
-                    console.log(key+"= {");
-                    showParams(value);
-                    console.log("}");
-                } else {
-                    console.log(key+"="+keyValues[key]);    
-                }
+            var value = keyValues[key];
+            if (value instanceof Object) {
+                console.log(key + '= {');
+                showParams(value);
+                console.log('}');
+            } else {
+                console.log(key + '=' + keyValues[key]);
             }
         }
-}
+    }
+};
